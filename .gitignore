@@ -1,0 +1,11 @@
+/archive
+archive.zip
+/yolo_labels
+/images/train
+/images/val
+/dataset
+/runs
+/weights
+/runs/detect
+/runs/train
+/runs/train/weights

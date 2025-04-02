@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Plate Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>License Plate Detection System</h1>
+            <p>Real-time license plate detection and validation</p>
+        </header>
+
+        <main>
+            <div class="video-container">
+                <h2>Live Detection</h2>
+                <div class="video-feed">
+                    <img src="{{ url_for('video_feed') }}" alt="Video feed">
+                </div>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Camera Active</span>
+                </div>
+            </div>
+
+            <div class="upload-container">
+                <h2>Upload Image</h2>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <input type="file" id="imageInput" accept="image/*">
+                        <label for="imageInput">Choose an image or drag it here</label>
+                    </div>
+                    <button type="submit" id="processButton">Process Image</button>
+                    <div class="loading-indicator" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>Processing image...</p>
+                    </div>
+                </form>
+            </div>
+
+            <div class="results-container">
+                <h2>Results</h2>
+                <div id="results">
+                    <div class="placeholder">
+                        <p>No results yet. Start the video feed or upload an image.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('imageInput');
+            const fileUpload = document.querySelector('.file-upload');
+            const loadingIndicator = document.querySelector('.loading-indicator');
+            const resultsContainer = document.getElementById('results');
+            const submitButton = document.querySelector('button[type="submit"]');
+
+            // Handle drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileUpload.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUpload.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUpload.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                fileUpload.classList.add('highlight');
+            }
+
+            function unhighlight(e) {
+                fileUpload.classList.remove('highlight');
+            }
+
+            fileUpload.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                handleFiles(files);
+            }
+
+            // Handle file selection
+            fileInput.addEventListener('change', function () {
+                handleFiles(this.files);
+            });
+
+            function handleFiles(files) {
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type.startsWith('image/')) {
+                        submitButton.disabled = false;
+                    } else {
+                        alert('Please select an image file.');
+                        submitButton.disabled = true;
+                    }
+                }
+            }
+
+            // Handle form submission
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+
+                // Show loading state
+                loadingIndicator.style.display = 'flex';
+                submitButton.disabled = true;
+                resultsContainer.innerHTML = '';
+
+                try {
+                    const response = await fetch('/process_image', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        displayResults(data);
+                    } else {
+                        throw new Error(data.error || 'Failed to process image');
+                    }
+                } catch (error) {
+                    resultsContainer.innerHTML = `
+                    <div class="result-card invalid">
+                        <h3>Error</h3>
+                        <p>${error.message}</p>
+                        <p>Please try again or contact support if the problem persists.</p>
+                    </div>
+                `;
+                } finally {
+                    // Hide loading state
+                    loadingIndicator.style.display = 'none';
+                    submitButton.disabled = false;
+                }
+            });
+
+            function displayResults(data) {
+                if (!data.plate_number) {
+                    resultsContainer.innerHTML = `
+                    <div class="result-card invalid">
+                        <h3>No License Plate Detected</h3>
+                        <p>Please try taking a clearer photo of the license plate.</p>
+                    </div>
+                `;
+                    return;
+                }
+
+                const isValid = data.is_valid === true;
+                const cardClass = isValid ? 'valid' : 'invalid';
+
+                resultsContainer.innerHTML = `
+                <div class="result-card ${cardClass}">
+                    <h3>Detection Results</h3>
+                    <p><strong>License Plate:</strong> ${data.plate_number}</p>
+                    <p><strong>Registration Status:</strong> ${data.registration_status || 'Unknown'}</p>
+                    <p><strong>License Status:</strong> ${data.license_status || 'Unknown'}</p>
+                    ${data.pending_cases ? `<p><strong>Pending Cases:</strong> ${data.pending_cases}</p>` : ''}
+                    <p><strong>Status:</strong> ${isValid ? 'Valid' : 'Invalid'}</p>
+                </div>
+            `;
+            }
+        });
+    </script>
+</body>
+
+</html>
