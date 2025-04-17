@@ -15,24 +15,36 @@ This project implements a real-time car license plate detection and recognition 
 - Python 3.8 or higher
 - CUDA-compatible GPU (recommended for better performance)
 - Webcam or video source
+- Git (for cloning the repository)
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/rumeasiyan/car-license-plate-detection.git
 cd car-license-plate-detection
 ```
 
-2. Create a virtual environment (recommended):
+2. Create and activate a virtual environment:
 ```bash
+# For Windows
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+venv\Scripts\activate
+
+# For macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 3. Install the required packages:
 ```bash
 pip install -r requirements.txt
+```
+
+4. Download the pre-trained YOLOv8 model (if not already present):
+```bash
+# The model should be included in the repository, but you can download it manually if needed
+wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt
 ```
 
 ## Project Structure
@@ -64,20 +76,29 @@ http://localhost:5000
    - Real-time video feed processing
    - Image upload and processing
 
-## Model Training
+## Model Training (Optional)
+
+If you want to train your own model:
 
 1. Prepare your dataset in the following structure:
 ```
 dataset/
 ├── images/
-│   ├── train/
-│   └── val/
+│   ├── train/  # Training images
+│   └── val/    # Validation images
 └── labels/
-    ├── train/
-    └── val/
+    ├── train/  # Training labels in YOLO format
+    └── val/    # Validation labels in YOLO format
 ```
 
-2. Update the `data.yaml` file with your dataset paths
+2. Update the `data.yaml` file with your dataset paths:
+```yaml
+path: ./dataset
+train: images/train
+val: images/val
+names:
+  0: license_plate
+```
 
 3. Run the training script:
 ```bash
@@ -86,12 +107,36 @@ yolo train model=yolov8n.pt data=data.yaml epochs=100 imgsz=640
 
 4. Monitor the training progress and adjust parameters as needed.
 
-5. Once training is complete, evaluate the model using:
+5. Once training is complete, evaluate the model:
 ```bash
 yolo val model=path/to/trained/model.pt data=data.yaml
 ```
 
 6. Use the trained model for inference in your application.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Webcam not detected**:
+   - Ensure your webcam is properly connected
+   - Check if other applications can access the webcam
+   - Try changing the video source index in `app.py`
+
+2. **CUDA errors**:
+   - Verify CUDA is properly installed
+   - Check if your GPU is compatible
+   - Try running without GPU acceleration
+
+3. **Dependencies issues**:
+   - Make sure all requirements are installed correctly
+   - Try reinstalling problematic packages
+   - Check Python version compatibility
+
+4. **Model loading errors**:
+   - Verify the model file exists
+   - Check file permissions
+   - Ensure the model file is not corrupted
 
 ## API Endpoints
 
