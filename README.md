@@ -84,6 +84,15 @@ dataset/
 yolo train model=yolov8n.pt data=data.yaml epochs=100 imgsz=640
 ```
 
+4. Monitor the training progress and adjust parameters as needed.
+
+5. Once training is complete, evaluate the model using:
+```bash
+yolo val model=path/to/trained/model.pt data=data.yaml
+```
+
+6. Use the trained model for inference in your application.
+
 ## API Endpoints
 
 - `/`: Main web interface
