@@ -12,29 +12,28 @@
     <div class="container">
         <header>
             <h1>License Plate Detection System</h1>
-            <p>Real-time license plate detection and validation</p>
+            <p>Upload an image to detect and validate license plates</p>
         </header>
 
         <main>
-            <div class="video-container">
-                <h2>Live Detection</h2>
-                <div class="video-feed">
-                    <img src="{{ url_for('video_feed') }}" alt="Video feed">
-                </div>
-                <div class="status-indicator">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Camera Active</span>
-                </div>
-            </div>
-
             <div class="upload-container">
                 <h2>Upload Image</h2>
                 <form id="uploadForm" enctype="multipart/form-data">
                     <div class="file-upload">
                         <input type="file" id="imageInput" accept="image/*">
-                        <label for="imageInput">Choose an image or drag it here</label>
+                        <label for="imageInput" id="fileLabel">Choose an image or drag it here</label>
                     </div>
-                    <button type="submit" id="processButton">Process Image</button>
+                    <div class="image-preview" style="display: none;">
+                        <h3>Selected Image:</h3>
+                        <div class="preview-container">
+                            <img id="imagePreview" src="#" alt="Preview">
+                            <div class="file-info">
+                                <p id="fileName">No file selected</p>
+                                <button type="button" id="removeImage" class="remove-btn">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" id="processButton" disabled>Process Image</button>
                     <div class="loading-indicator" style="display: none;">
                         <div class="spinner"></div>
                         <p>Processing image...</p>
@@ -46,7 +45,7 @@
                 <h2>Results</h2>
                 <div id="results">
                     <div class="placeholder">
-                        <p>No results yet. Start the video feed or upload an image.</p>
+                        <p>Upload an image to see the results.</p>
                     </div>
                 </div>
             </div>
@@ -61,6 +60,11 @@
             const loadingIndicator = document.querySelector('.loading-indicator');
             const resultsContainer = document.getElementById('results');
             const submitButton = document.querySelector('button[type="submit"]');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewContainer = document.querySelector('.image-preview');
+            const fileLabel = document.getElementById('fileLabel');
+            const fileName = document.getElementById('fileName');
+            const removeButton = document.getElementById('removeImage');
 
             // Handle drag and drop
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -102,16 +106,38 @@
                 handleFiles(this.files);
             });
 
+            // Remove image button handler
+            removeButton.addEventListener('click', function () {
+                fileInput.value = '';
+                previewContainer.style.display = 'none';
+                fileUpload.style.display = 'block';
+                submitButton.disabled = true;
+                imagePreview.src = '#';
+                fileName.textContent = 'No file selected';
+            });
+
             function handleFiles(files) {
                 if (files.length > 0) {
                     const file = files[0];
                     if (file.type.startsWith('image/')) {
                         submitButton.disabled = false;
+                        displayImagePreview(file);
                     } else {
                         alert('Please select an image file.');
                         submitButton.disabled = true;
                     }
                 }
+            }
+
+            function displayImagePreview(file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                    fileUpload.style.display = 'none';
+                    fileName.textContent = file.name;
+                };
+                reader.readAsDataURL(file);
             }
 
             // Handle form submission
@@ -165,17 +191,22 @@
                     return;
                 }
 
-                const isValid = data.is_valid === true;
-                const cardClass = isValid ? 'valid' : 'invalid';
+                const status = data.status || 'Unknown';
+                const cardClass = status === 'Valid' ? 'valid' : 'invalid';
 
                 resultsContainer.innerHTML = `
                 <div class="result-card ${cardClass}">
                     <h3>Detection Results</h3>
                     <p><strong>License Plate:</strong> ${data.plate_number}</p>
-                    <p><strong>Registration Status:</strong> ${data.registration_status || 'Unknown'}</p>
-                    <p><strong>License Status:</strong> ${data.license_status || 'Unknown'}</p>
-                    ${data.pending_cases ? `<p><strong>Pending Cases:</strong> ${data.pending_cases}</p>` : ''}
-                    <p><strong>Status:</strong> ${isValid ? 'Valid' : 'Invalid'}</p>
+                    <p><strong>Status:</strong> ${status}</p>
+                    ${data.vehicle_info ? `
+                        <div class="vehicle-info">
+                            <h4>Vehicle Information:</h4>
+                            <p><strong>Valid:</strong> ${data.vehicle_info.valid ? 'Yes' : 'No'}</p>
+                            <p><strong>Expired:</strong> ${data.vehicle_info.expired ? 'Yes' : 'No'}</p>
+                            <p><strong>Has Cases:</strong> ${data.vehicle_info.cases ? 'Yes' : 'No'}</p>
+                        </div>
+                    ` : ''}
                 </div>
             `;
             }

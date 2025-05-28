@@ -9,3 +9,6 @@ archive.zip
 /runs/detect
 /runs/train
 /runs/train/weights
+
+# env
+.env
