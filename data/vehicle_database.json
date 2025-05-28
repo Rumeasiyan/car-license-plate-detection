@@ -1,0 +1,52 @@
+{
+    "WP-KH-1234": {
+        "valid": true,
+        "expired": false,
+        "cases": false
+    },
+    "CP-BAC-5678": {
+        "valid": false,
+        "expired": true,
+        "cases": true
+    },
+    "SP-PB-AB-9012": {
+        "valid": true,
+        "expired": false,
+        "cases": false
+    },
+    "NW-CAR-3456": {
+        "valid": false,
+        "expired": true,
+        "cases": false
+    },
+    "WP-PB-CD-7890": {
+        "valid": true,
+        "expired": false,
+        "cases": true
+    },
+    "EP-KV-2345": {
+        "valid": false,
+        "expired": false,
+        "cases": true
+    },
+    "SG-DAF-6789": {
+        "valid": true,
+        "expired": true,
+        "cases": false
+    },
+    "NP-PB-EF-0123": {
+        "valid": true,
+        "expired": false,
+        "cases": false
+    },
+    "UP-GH-4567": {
+        "valid": true,
+        "expired": false,
+        "cases": false
+    },
+    "WP-KV-3374": {
+        "valid": true,
+        "expired": false,
+        "cases": false
+    }
+}

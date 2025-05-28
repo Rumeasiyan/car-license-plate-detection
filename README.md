@@ -1,188 +1,154 @@
-# Car License Plate Detection System
+# License Plate Detection with Groq API
 
-This project implements a real-time car license plate detection and recognition system using YOLOv8 for detection and EasyOCR for text recognition. The system is built with Flask and provides a web interface for both real-time video processing and image uploads.
+This Flask application provides a web interface for detecting and validating Sri Lankan vehicle license plates using the Groq API. Upload images of vehicles to detect license plate numbers and check their status against a mock database.
 
 ## Features
 
-- Real-time license plate detection using YOLOv8
-- License plate text recognition using EasyOCR
-- Web interface for video feed and image uploads
-- Vehicle status checking system
-- Support for both video streaming and image processing
+- Image upload functionality
+- Sri Lankan license plate detection using Groq's LLM API
+- Vehicle information validation
+- Modern, responsive web interface
+- JSON-based vehicle database
+
+## Sri Lankan License Plate Format
+
+The application recognizes standard Sri Lankan license plate formats:
+
+1. Province-Letters-Numbers (e.g., WP-CAR-1234)
+2. Province-Category-Letters-Numbers (e.g., WP-PB-AB-1234)
+3. Province-Letters/Category-Numbers (e.g., WP-KV-3374)
+
+Common province codes:
+- WP: Western Province
+- CP: Central Province
+- SP: Southern Province
+- NP: Northern Province
+- EP: Eastern Province
+- NW: North Western Province
+- SG: Sabaragamuwa Province
+- UP: Uva Province
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- CUDA-compatible GPU (recommended for better performance)
-- Webcam or video source
-- Git (for cloning the repository)
+- Groq API key
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/rumeasiyan/car-license-plate-detection.git
+git clone <repository-url>
 cd car-license-plate-detection
 ```
 
 2. Create and activate a virtual environment:
 ```bash
-# For Windows
-python -m venv venv
-venv\Scripts\activate
-
-# For macOS/Linux
+# Create virtual environment
 python3 -m venv venv
+
+# Activate virtual environment
+# For macOS/Linux:
 source venv/bin/activate
+# For Windows:
+venv\Scripts\activate
 ```
 
-3. Install the required packages:
+3. Install the required dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Download the pre-trained YOLOv8 model (if not already present):
+4. Set up environment variables:
+Create a `.env` file in the root directory and add your Groq API key:
 ```bash
-# The model should be included in the repository, but you can download it manually if needed
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt
+GROQ_API_KEY=your_api_key_here
 ```
 
-## Project Structure
+## Running the Application
 
-```
-.
-├── app.py                 # Main Flask application
-├── data.yaml             # YOLO dataset configuration
-├── requirements.txt      # Python dependencies
-├── split_dataset.py      # Dataset splitting utility
-├── templates/            # HTML templates
-├── static/              # Static files (CSS, JS, etc.)
-└── yolov8n.pt           # Pre-trained YOLO model
+1. Make sure your virtual environment is activated:
+```bash
+# For macOS/Linux:
+source venv/bin/activate
+# For Windows:
+venv\Scripts\activate
 ```
 
-## Usage
-
-1. Start the Flask application:
+2. Start the Flask server:
 ```bash
 python app.py
 ```
 
-2. Open your web browser and navigate to:
+3. Open your web browser and navigate to:
 ```
-http://localhost:5000
-```
-
-3. Choose between:
-   - Real-time video feed processing
-   - Image upload and processing
-
-## Model Training (Optional)
-
-If you want to train your own model:
-
-1. Prepare your dataset in the following structure:
-```
-dataset/
-├── images/
-│   ├── train/  # Training images
-│   └── val/    # Validation images
-└── labels/
-    ├── train/  # Training labels in YOLO format
-    └── val/    # Validation labels in YOLO format
+http://localhost:8080
 ```
 
-2. Update the `data.yaml` file with your dataset paths:
-```yaml
-path: ./dataset
-train: images/train
-val: images/val
-names:
-  0: license_plate
+## Usage
+
+1. Access the web interface through your browser
+2. Click "Choose File" or drag and drop an image containing a Sri Lankan vehicle license plate
+3. Click "Process Image" to analyze the image
+4. View the results:
+   - Detected license plate number in standard Sri Lankan format
+   - Vehicle status (Valid, Invalid, Expired, or Has Cases)
+   - Detailed vehicle information if available
+
+## Vehicle Database
+
+The application uses a JSON-based vehicle database located at `data/vehicle_database.json`. The database structure is as follows:
+
+```json
+{
+    "PROVINCE-CATEGORY-NUMBER": {
+        "valid": boolean,
+        "expired": boolean,
+        "cases": boolean
+    }
+}
 ```
 
-3. Run the training script:
-```bash
-yolo train model=yolov8n.pt data=data.yaml epochs=100 imgsz=640
+### Database Fields
+
+- `valid`: Indicates if the license plate is currently valid
+- `expired`: Indicates if the license has expired
+- `cases`: Indicates if there are any pending cases against the vehicle
+
+### Example Entry
+
+```json
+{
+    "WP-KV-3374": {
+        "valid": true,
+        "expired": false,
+        "cases": false
+    }
+}
 ```
 
-4. Monitor the training progress and adjust parameters as needed.
+### Modifying the Database
 
-5. Once training is complete, evaluate the model:
-```bash
-yolo val model=path/to/trained/model.pt data=data.yaml
-```
+To add or modify vehicle entries:
+1. Open `data/vehicle_database.json`
+2. Add or modify entries following the Sri Lankan license plate format
+3. Ensure the JSON is valid before saving
+4. The application will automatically load changes on restart
 
-6. Use the trained model for inference in your application.
+## Error Handling
 
-## Troubleshooting
+The application includes error handling for:
+- Invalid image files
+- Missing database file
+- Invalid JSON format
+- API processing errors
+- Unrecognized license plate formats
 
-### Common Issues
+## Security Notes
 
-1. **Webcam not detected**:
-   - Ensure your webcam is properly connected
-   - Check if other applications can access the webcam
-   - Try changing the video source index in `app.py`
+- Store your Groq API key securely in the `.env` file
+- Never commit the `.env` file to version control
+- This is a development server - use a production WSGI server for deployment
 
-2. **CUDA errors**:
-   - Verify CUDA is properly installed
-   - Check if your GPU is compatible
-   - Try running without GPU acceleration
+## License
 
-3. **Dependencies issues**:
-   - Make sure all requirements are installed correctly
-   - Try reinstalling problematic packages
-   - Check Python version compatibility
-
-4. **Model loading errors**:
-   - Verify the model file exists
-   - Check file permissions
-   - Ensure the model file is not corrupted
-
-## API Endpoints
-
-- `/`: Main web interface
-- `/video_feed`: Real-time video stream
-- `/process_image`: Image processing endpoint
-
-## Dependencies
-
-- ultralytics>=8.0.0
-- opencv-python>=4.8.0
-- easyocr>=1.7.0
-- flask>=2.0.0
-- pillow>=10.0.0
-- numpy>=1.24.0
-
-## 📝 License
-
-This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-## 👏 Credits
-
-Created by [Rumeasiyan](https://github.com/rumeasiyan)
-
-## 🤝 Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## Contributors
-
-<div align="center">
-  <a href="https://github.com/rumeasiyan">
-    <img src="https://github.com/rumeasiyan.png" width="100" style="border-radius: 50%;">
-    <br>
-    <sub><b>Rumeasiyan</b></sub>
-  </a>
-</div>
-
-## Acknowledgments
-
-- YOLOv8 for object detection
-- EasyOCR for text recognition
-- Flask for web framework 
+[Add your license information here] 
